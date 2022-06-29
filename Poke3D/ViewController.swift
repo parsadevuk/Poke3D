@@ -10,9 +10,7 @@ import SceneKit
 import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
-
     @IBOutlet var sceneView: ARSCNView!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -22,18 +20,26 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
         
-        // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        sceneView.autoenablesDefaultLighting = true
+        sceneView.automaticallyUpdatesLighting = true
         
-        // Set the scene to the view
-        sceneView.scene = scene
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        
         // Create a session configuration
-        let configuration = ARWorldTrackingConfiguration()
+        let configuration = ARImageTrackingConfiguration()
+        
+        if let imageToTrack = ARReferenceImage.referenceImages(inGroupNamed: "Pokemon Cards", bundle: Bundle.main) {
+        
+        configuration.trackingImages = imageToTrack
+        
+        configuration.maximumNumberOfTrackedImages = 2
+        
+        print("Images Successfully Added")
+        }
 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -47,28 +53,37 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
 
     // MARK: - ARSCNViewDelegate
+    func modelRender (imageAnchor : ARImageAnchor){
+
+    }
     
-/*
-    // Override to create and configure nodes for anchors added to the view's session.
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
         let node = SCNNode()
-     
-        return node
-    }
-*/
-    
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
-        
-    }
-    
-    func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
-        
-    }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
-        
-    }
-}
+        if let imageAnchor = anchor as? ARImageAnchor {
+            print("modelRender trigered")
+            print("Model Name :\(imageAnchor.referenceImage.name)")
+            let plane = SCNPlane(width: imageAnchor.referenceImage.physicalSize.width, height: imageAnchor.referenceImage.physicalSize.height)
+            plane.firstMaterial?.diffuse.contents = UIColor(white: 1, alpha: 0.5)
+            let planeNode = SCNNode(geometry: plane)
+            planeNode.eulerAngles.x = -.pi / 2
+            node.addChildNode(planeNode)
+            print("Plane node created")
+            
+            let nameText = SCNText(string: imageAnchor.referenceImage.name, extrusionDepth: 2)
+            let material = SCNMaterial()
+            material.diffuse.contents = UIColor.blue
+            nameText.materials = [material]
+            let textNode = SCNNode()
+            textNode.position = SCNVector3(x: -0.03, y: 0.005, z: 0.0)
+            print(planeNode.position)
+            textNode.scale = SCNVector3(x:0.001, y:0.001, z:0.001)
+            textNode.geometry = nameText
+            textNode.castsShadow = true
+            textNode.eulerAngles.x = -.pi / 4
+            node.addChildNode(textNode)
+            
+            let pokeScene = SCNScene(named: "art.scnassets/\(imageAnchor.referenceImage.name ?? "").scn")
+            if let pokeNode = pokeScene?.rootNode.childNodes.first {
+                pokeNode.eulerAngles.x = .pi / 2
+            planeNode.addChildNode(pokeNode)}}
+        return node}}
